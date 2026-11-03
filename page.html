@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FXPredictAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Toggle billing logic
+    let isAnnual = false;
+    function toggleBilling(isYearly) {
+      isAnnual = isYearly;
+      document.querySelectorAll('.price').forEach(el => {
+        const monthly = el.getAttribute('data-monthly');
+        const yearly = el.getAttribute('data-yearly');
+        el.textContent = isAnnual ? `$${yearly}` : `$${monthly}`;
+      });
+      document.querySelectorAll('.period').forEach(el => {
+        el.textContent = isAnnual ? '/year' : '/month';
+      });
+      document.getElementById('monthlyBtn').classList.toggle('bg-blue-600', !isAnnual);
+      document.getElementById('monthlyBtn').classList.toggle('text-white', !isAnnual);
+      document.getElementById('annualBtn').classList.toggle('bg-blue-600', isAnnual);
+      document.getElementById('annualBtn').classList.toggle('text-white', isAnnual);
+    }
+  </script>
+</head>
+<body class="bg-gray-100 font-inter text-gray-800 antialiased">
+
+  <!-- Header -->
+  <header class="bg-white shadow-lg py-4 px-6 md:px-12">
+    <nav class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <svg class="text-blue-600 h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="text-2xl font-bold text-gray-900">FXPredictAI</span>
+      </div>
+      <div class="hidden md:flex space-x-8">
+        <a href="#features" class="text-gray-700 hover:text-blue-600 font-medium">Features</a>
+        <a href="#pricing" class="text-gray-700 hover:text-blue-600 font-medium">Pricing</a>
+        <a href="#faq" class="text-gray-700 hover:text-blue-600 font-medium">FAQ</a>
+        <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative py-24 px-6 md:px-12 text-center text-white overflow-hidden rounded-b-3xl shadow-xl" style="background-image: linear-gradient(to bottom, rgba(30, 64, 175, 0.7), rgba(17, 24, 39, 0.8)), url('https://placehold.co/1920x800/2563EB/FFFFFF?text=Forex+Market+Trends'); background-size: cover; background-position: center;">
+    <div class="container mx-auto max-w-5xl">
+      <h1 class="text-5xl md:text-7xl font-extrabold leading-tight mb-6">Master Forex with AI-Driven Insights</h1>
+      <p class="text-xl md:text-2xl mb-10">Unlock the power of predictive analytics for smarter trading decisions.</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-5">
+        <a href="#pricing" class="px-10 py-4 bg-white text-blue-700 font-bold text-xl rounded-xl hover:bg-gray-100">Explore Plans</a>
+        <a href="#" class="px-10 py-4 border-2 border-white text-white font-bold text-xl rounded-xl hover:bg-white hover:text-blue-700">See Demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-20 px-6 md:px-12 bg-white rounded-t-3xl -mt-12">
+    <div class="container mx-auto max-w-7xl">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900">Unleash Your Trading Potential</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div class="bg-blue-50 p-10 rounded-3xl shadow-xl text-center border border-blue-100">
+          <svg class="text-blue-600 h-20 w-20 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3 class="text-2xl font-semibold mb-4">Precision AI Predictions</h3>
+          <p>AI models analyze market data to deliver accurate forex predictions.</p>
+        </div>
+        <!-- Copy and paste above block for each additional feature (5 more needed) -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-20 px-6 md:px-12 bg-gray-50">
+    <div class="container mx-auto max-w-7xl">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900">Flexible Plans for Every Trader</h2>
+
+      <!-- Billing Toggle -->
+      <div class="flex justify-center mb-12">
+        <div class="inline-flex items-center p-2 rounded-full bg-gray-200 shadow-inner">
+          <button id="monthlyBtn" onclick="toggleBilling(false)" class="px-8 py-3 rounded-full text-lg font-semibold bg-blue-600 text-white">Monthly Billing</button>
+          <button id="annualBtn" onclick="toggleBilling(true)" class="px-8 py-3 rounded-full text-lg font-semibold text-gray-700 hover:text-blue-600">Annual Billing <span class="text-sm ml-2 bg-blue-200 text-blue-800 px-3 py-1 rounded-full font-bold">SAVE UP TO 16%</span></button>
+        </div>
+      </div>
+
+      <!-- Pricing Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <!-- Basic Plan -->
+        <div class="bg-white p-10 rounded-3xl shadow-2xl flex flex-col border-t-8 border-gray-200">
+          <h3 class="text-4xl font-bold text-gray-900 mb-3">Basic</h3>
+          <p class="text-gray-600 mb-8 text-lg">Start your journey with essential signals and analysis.</p>
+          <div class="flex items-baseline mb-10">
+            <span class="text-6xl font-extrabold text-blue-600 price" data-monthly="99" data-yearly="999">$99</span>
+            <span class="text-2xl text-gray-500 ml-3 period">/month</span>
+          </div>
+          <ul class="space-y-4 mb-10 text-gray-700">
+            <li>✔ Real-time Forex Signals (Limited)</li>
+            <li>✔ Basic Analysis Dashboard</li>
+            <li>✔ Email Support</li>
+            <li>✔ Daily Market Insights</li>
+          </ul>
+          <button class="w-full py-4 bg-blue-600 text-white font-bold text-xl rounded-xl hover:bg-blue-700">Get Started</button>
+        </div>
+        <!-- Pro and Premium Cards... (repeat with their own data attributes) -->
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-20 px-6 md:px-12 bg-white">
+    <div class="container mx-auto max-w-5xl">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-gray-900">Your Questions, Answered</h2>
+      <div class="space-y-8">
+        <details class="bg-gray-50 p-8 rounded-2xl shadow-lg">
+          <summary class="flex justify-between items-center font-semibold text-xl cursor-pointer">
+            How accurate are the prediction models?
+            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+          <p class="mt-6 text-gray-700">Our models utilize AI and ML algorithms to provide highly accurate predictions.</p>
+        </details>
+        <!-- Repeat for other FAQs -->
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="relative py-24 px-6 md:px-12 text-center text-white rounded-t-3xl shadow-xl" style="background-image: linear-gradient(to top, rgba(30, 64, 175, 0.7), rgba(17, 24, 39, 0.8)), url('https://placehold.co/1920x800/1E40AF/FFFFFF?text=Global+Markets'); background-size: cover;">
+    <div class="container mx-auto max-w-4xl">
+      <h2 class="text-5xl md:text-6xl font-extrabold mb-8">Ready to Transform Your Trading?</h2>
+      <p class="text-xl md:text-2xl mb-10">Join elite traders who leverage AI for superior performance.</p>
+      <a href="#pricing" class="px-12 py-5 bg-white text-blue-700 font-bold text-2xl rounded-xl hover:bg-gray-100">Get Started Now</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12 px-6 md:px-12">
+    <div class="container mx-auto text-center text-gray-400 text-lg">
+      <p>&copy; 2025 FXPredictAI. All rights reserved.</p>
+      <div class="flex justify-center space-x-8 mt-5">
+        <a href="#" class="hover:text-blue-400">Privacy Policy</a>
+        <a href="#" class="hover:text-blue-400">Terms of Service</a>
+        <a href="#" class="hover:text-blue-400">Disclaimer</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

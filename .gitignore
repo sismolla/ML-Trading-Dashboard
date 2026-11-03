@@ -1,0 +1,151 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/static/
+/media/
+/staticfiles/
+/mediafiles/
+
+# ML Models (large files)
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.pb
+*.pth
+*.pt
+*.onnx
+*.joblib
+trained_model_finalisma.pkl
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.parquet
+*.feather
+*.h5
+*.hdf5
+xauusd_data.csv
+full_data.csv
+tickets.json
+last_row_timestamp.txt
+time_checking.txt
+
+# CatBoost
+catboost_info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-*
+*.code-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Environment and Secrets
+.env
+.env.local
+.env.*.local
+*.env
+secrets.json
+config.json
+credentials.json
+
+# Logs
+*.log
+logs/
+*.out
+*.err
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+*.bak
+*.swp
+*~
+
+# MetaTrader 5
+*.ex5
+*.mq5
+*.mqh
+MQL5/Indicators/
+MQL5/Experts/
+MQL5/Scripts/
+
+# Django migrations (optional - uncomment if you want to ignore migration files)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Pytype
+.pytype/
+
+# profiling
+*.prof

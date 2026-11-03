@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FX Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js Financial plugin is no longer directly used for candlestick, but kept if other financial charts might appear -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+
+  <!-- Plotly.js is used if candlestick_div renders a Plotly chart -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <style>
+    :root {
+      --dracula-bg: #282a36;
+      --dracula-fg: #f8f8f2;
+      --dracula-purple: #bd93f9;
+      --dracula-pink: #ff79c6;
+      --dracula-green: #50fa7b;
+      --dracula-cyan: #8be9fd;
+      --dracula-orange: #ffb86c;
+      --dracula-red: #ff5555;
+    }
+    body {
+      background-color: var(--dracula-bg);
+      color: var(--dracula-fg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      /* Ensure full height for better layout on smaller screens if needed */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+        flex-grow: 1; /* Allow container to grow and take available space */
+    }
+    .card {
+      background-color: #44475a;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      height: 100%; /* Make cards fill height of their column */
+      display: flex;
+      flex-direction: column;
+    }
+    .card-header {
+      font-weight: bold;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0; /* Prevent header from shrinking */
+    }
+    .card-body {
+        flex-grow: 1; /* Allow body to take remaining space */
+        display: flex;
+        flex-direction: column; /* Stack content vertically */
+        justify-content: center; /* Center content vertically in the card */
+        align-items: center; /* Center content horizontally */
+        padding: 1.5rem; /* Add some padding */
+    }
+    h4, p, li {
+      color: var(--dracula-fg);
+      text-align: center; /* Center text within profit panels */
+      margin-bottom: 0.5rem; /* Small margin between paragraphs */
+    }
+    h4 {
+        margin-top: 0; /* Remove top margin for h4 after a p tag */
+    }
+    /* Style for charts to ensure they fit within card-body */
+    canvas {
+      max-width: 100%;
+      height: auto; /* Maintain aspect ratio */
+    }
+    /* Specific styling for plotly charts if they are rendered directly into the div */
+    .js-plotly-plot {
+      width: 100% !important;
+      height: 100% !important; /* Ensure Plotly chart fills its container */
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4 mb-4">
+
+   <!-- New: Button and Recent Prediction Display -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{% url 'dashboard:trading_dashboard' %}" class="text-decoration-none">
+        <button class="dracula-button">
+            &#8592; Back to Dashboard
+        </button>
+    </a>
+    <div class="prediction-display">
+      <p>{{ recent_pred }}
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Top Row -->
+    <!-- Panel 1: Candlestick Chart (Large Left Column) -->
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header" style="background-color: var(--dracula-purple);">
+          OHLC Candlestick Chart (Last 100)
+        </div>
+        <div class="card-body">
+          <!-- This div is expected to be populated by Plotly via candlestick_div from Django -->
+          {{ candlestick_div|safe }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 2 & 3: Profit Panels (Right Column, stacked vertically) -->
+    <div class="col-md-4 d-flex flex-column">
+      <!-- Today's Profit -->
+      <div class="card shadow mb-4" style="border-left: 4px solid var(--dracula-green);">
+        <div class="card-header" style="background-color: var(--dracula-green); color: #000;">
+          Today's Profit (0.01 Lot)
+        </div>
+        <div class="card-body">
+          <h4 style="color: var(--dracula-green);">{{ today_profit|default:"0.00" }}</h4>
+        </div>
+      </div>
+
+      <!-- Last Period Profits (Weekly & Monthly) -->
+      <div class="card shadow flex-grow-1" style="border-left: 4px solid var(--dracula-orange);">
+        <div class="card-header" style="background-color: var(--dracula-orange); color: #000;">
+          Last Period Profits
+        </div>
+        <div class="card-body">
+          <p><strong>Last Week's Profit:</strong></p>
+          <h4 style="color: var(--dracula-cyan);">{{ weekly|default:"0.00" }}</h4>
+
+          <p class="mt-3"><strong>Last Month's Profit:</strong></p>
+          <h4 style="color: var(--dracula-orange);">${{ monthly|default:"0.00" }}</h4>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <!-- Panel 4: Equity Curve (Full Width) -->
+    <div class="col-12 mt-4">
+      <div class="card shadow" style="border-left: 4px solid var(--dracula-cyan);">
+        <div class="card-header" style="background-color: var(--dracula-cyan); color: #000;">
+          Equity Curve (Last Trades)
+        </div>
+        <div class="card-body">
+          <canvas id="equityChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Equity Curve JS -->
+<script>
+  // Ensure 'equity' data is passed from your Django context
+  const equityValues = {{ equity|safe }};
+  const equityLabels = Array.from({ length: equityValues.length }, (_, i) => `Trade ${i + 1}`);
+
+  // Only create the chart if there's data to display
+  if (equityValues.length > 0) {
+    const ctxEquity = document.getElementById('equityChart').getContext('2d');
+    new Chart(ctxEquity, {
+      type: 'line',
+      data: {
+        labels: equityLabels,
+        datasets: [{
+          label: 'Equity ($)',
+          data: equityValues,
+          fill: true,
+          backgroundColor: 'rgba(139, 233, 253, 0.2)',
+          borderColor: '#8be9fd',
+          tension: 0.3,
+          pointBackgroundColor: '#ff79c6',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false, /* Allow canvas to stretch/shrink within parent */
+        plugins: {
+          legend: { labels: { color: 'var(--dracula-fg)' } }
+        },
+        scales: {
+          x: {
+            ticks: { color: 'var(--dracula-fg)' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          },
+          y: {
+            ticks: { color: 'var(--dracula-fg)' },
+            grid: { color: 'rgba(255,255,255,0.1)' }
+          }
+        }
+      }
+    });
+  } else {
+      // Display a message if no equity data is available
+      const equityChartDiv = document.getElementById('equityChart').parentNode;
+      equityChartDiv.innerHTML = '<p style="text-align: center; color: var(--dracula-fg);">No equity data available to display chart.</p>';
+  }
+
+</script>
+
+</body>
+</html>

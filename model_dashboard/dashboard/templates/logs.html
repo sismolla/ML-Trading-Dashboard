@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Model Logs</title>
+  <style>
+    body {
+      background-color: #0f0f0f;
+      color: #0f0;
+      font-family: monospace;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #00ffe1;
+      margin-bottom: 10px;
+    }
+
+    #log-container {
+      background-color: #111;
+      border: 1px solid #0f0;
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    a {
+      color: #0af;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧠 Model Running Logs</h2>
+  <p>Tracking logs for: <strong>{{ symbol }}</strong></p>
+  <div id="log-container"><pre id="logs">Loading logs...</pre></div>
+
+  <p><a href="{% url 'dashboard:dashboard' %}">← Back to Launch</a></p>
+<script>
+const jobId = "{{ job_id|default:'' }}";
+const logContainer = document.getElementById('log-container');
+
+if (!jobId) {
+  logContainer.textContent = '❗ No job ID provided.';
+} else {
+  let intervalId = null;
+
+  async function fetchLogs() {
+    try {
+      const res = await fetch(`/logs/api/?job_id=${jobId}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+      const data = await res.json();
+      if (!data.logs || !Array.isArray(data.logs)) {
+        throw new Error('⚠️ Invalid logs received');
+      }
+
+      logContainer.textContent = data.logs.join('\n');
+      logContainer.scrollTop = logContainer.scrollHeight;
+
+      // ✅ Stop fetching if logs contain final message
+      if (data.logs.some(log => log.includes("Model finished running."))) {
+        clearInterval(intervalId);
+        logContainer.textContent += '\n✅ Model completed. Stopped polling logs.';
+      }
+
+    } catch (error) {
+      logContainer.textContent += `\n❌ Error fetching logs: ${error.message}`;
+      console.error(error);
+      clearInterval(intervalId); // Optional: stop on fetch error
+    }
+  }
+
+  fetchLogs(); // Fetch once immediately
+  intervalId = setInterval(fetchLogs, 1000); // Then poll every second
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Model Launcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Material Design Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-4xl font-extrabold text-blue-400 tracking-wide">
+                <i class="mdi mdi-rocket text-blue-500"></i> Model Launcher
+            </h1>
+            <div class="flex space-x-4">
+                <a href="{% url 'dashboard:trading_dashboard' %}">
+                    <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                        <i class="mdi mdi-arrow-left"></i> Back to Dashboard
+                    </button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Timeframe Quick Select -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400">
+                <i class="mdi mdi-clock-outline"></i> Quick Select Timeframe
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <button onclick="setTimeframePreset('1d')" 
+                    class="timeframe-btn bg-blue-700 hover:bg-blue-800 text-white p-4 rounded-lg shadow transition-all duration-200 transform hover:scale-105">
+                    <i class="mdi mdi-calendar"></i>
+                    <span class="block text-xl font-bold mt-2">1 Day</span>
+                    <span class="text-sm opacity-80">D1, H4, H1</span>
+                </button>
+                <button onclick="setTimeframePreset('4h')" 
+                    class="timeframe-btn bg-green-700 hover:bg-green-800 text-white p-4 rounded-lg shadow transition-all duration-200 transform hover:scale-105">
+                    <i class="mdi mdi-clock-outline"></i>
+                    <span class="block text-xl font-bold mt-2">4 Hours</span>
+                    <span class="text-sm opacity-80">H2, H1</span>
+                </button>
+                <button onclick="setTimeframePreset('2h')" 
+                    class="timeframe-btn bg-purple-700 hover:bg-purple-800 text-white p-4 rounded-lg shadow transition-all duration-200 transform hover:scale-105">
+                    <i class="mdi mdi-timer-sand"></i>
+                    <span class="block text-xl font-bold mt-2">2 Hours</span>
+                    <span class="text-sm opacity-80">H1, M30</span>
+                </button>
+                <button onclick="setTimeframePreset('1h')" 
+                    class="timeframe-btn bg-orange-700 hover:bg-orange-800 text-white p-4 rounded-lg shadow transition-all duration-200 transform hover:scale-105">
+                    <i class="mdi mdi-timer"></i>
+                    <span class="block text-xl font-bold mt-2">1 Hour</span>
+                    <span class="text-sm opacity-80">M30, M15</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Model Launch Form -->
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-6 text-green-400">
+                <i class="mdi mdi-cog"></i> Model Parameters
+            </h2>
+            
+            <form method="post" id="modelForm">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Symbol Selection -->
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Symbol</label>
+                        <select name="symbol" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in SYMBOL_CHOICES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Floor Time -->
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Floor Time</label>
+                        <select name="floor_time" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in FLOOR_TIME_CHOICES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Data Timeframes -->
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Base Data (d1)</label>
+                        <select name="d1" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in TIMEFRAME_CHOICES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Secondary Data (d2)</label>
+                        <select name="d2" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in TIMEFRAME_CHOICES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Smaller Data (d3)</label>
+                        <select name="d3" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in TIMEFRAME_CHOICES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Feature Timeframes -->
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Timeframe 1</label>
+                        <select name="timeframe1" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in FEATURE_TIMEFRAMES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Timeframe 2</label>
+                        <select name="timeframe2" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% for value, label in FEATURE_TIMEFRAMES %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Number of Bars -->
+                    <div class="form-group">
+                        <label class="block text-gray-400 mb-2">Number of Bars</label>
+                        <input type="number" name="num_bars" min="10000" max="200000" value="100000" 
+                               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center transition-all duration-200 transform hover:scale-105">
+                        <i class="mdi mdi-rocket-launch mr-2"></i> Launch Prediction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Timeframe presets based on your requirements
+        const timeframePresets = {
+            '1d': {
+                d1: 'TIMEFRAME_D1',
+                d2: 'TIMEFRAME_H4',
+                d3: 'TIMEFRAME_H1',
+                floor_time: '1d',
+                timeframe1: '4h',
+                timeframe2: '1h'
+            },
+            '4h': {
+                d1: 'TIMEFRAME_H4',
+                d2: 'TIMEFRAME_H2',
+                d3: 'TIMEFRAME_H1',
+                floor_time: '4h',
+                timeframe1: '2h',
+                timeframe2: '1h'
+            },
+            '2h': {
+                d1: 'TIMEFRAME_H2',
+                d2: 'TIMEFRAME_H1',
+                d3: 'TIMEFRAME_M30',
+                floor_time: '2h',
+                timeframe1: '1h',
+                timeframe2: '30min'
+            },
+            '1h': {
+                d1: 'TIMEFRAME_H1',
+                d2: 'TIMEFRAME_M30',
+                d3: 'TIMEFRAME_M15',
+                floor_time: '1h',
+                timeframe1: '30min',
+                timeframe2: '15min'
+            }
+        };
+
+        function setTimeframePreset(presetKey) {
+            const preset = timeframePresets[presetKey];
+            const form = document.getElementById('modelForm');
+            
+            // Set all the form values
+            form.elements['d1'].value = preset.d1;
+            form.elements['d2'].value = preset.d2;
+            form.elements['d3'].value = preset.d3;
+            form.elements['floor_time'].value = preset.floor_time;
+            form.elements['timeframe1'].value = preset.timeframe1;
+            form.elements['timeframe2'].value = preset.timeframe2;
+            
+            // Highlight the selected button
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-blue-400');
+            });
+            event.currentTarget.classList.add('ring-4', 'ring-blue-400');
+            
+            // Optional: Scroll to form for better UX
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
+
+
+
+

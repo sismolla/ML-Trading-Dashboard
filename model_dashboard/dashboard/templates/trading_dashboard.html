@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trading Model Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Material Design Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+
+#resizer {
+  width: 5px;
+  height: 100%;
+  background: #ccc;
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-4xl font-extrabold text-blue-400 tracking-wide">
+                <i class="mdi mdi-finance text-blue-500"></i> Trading Intelligence Hub
+            </h1>
+            <div class="flex space-x-4">
+            <button onclick="location.reload()" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded shadow">
+                <i class="mdi mdi-refresh-circle"></i> Sync Data
+            </button>
+
+            <a href="{%url 'dashboard:smc_dashboard'%}"><button class="bg-grey hover:bg-gray-700 text-white px-4 py-2 rounded shadow">
+                Evaluate Entry
+            </button></a>
+
+        
+                <a href="{%url 'dashboard:evaluate_predictions'%}"><button class="bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded shadow">
+                Evaluate Results
+            </button></a>
+
+                  <a href="{%url 'dashboard:dashboard'%}"><button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+                  <i class="mdi mdi-rocket-launch"></i> Launch Prediction
+                </button></a>
+
+                <a href="{%url 'fx_dashboard:fx-dashboard'%}"><button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+                  <i class="mdi mdi-rocket-launch"></i> Profit Track
+                </button></a>
+                
+                <button id="toggleNoteBtn" title="Toggle Notes" 
+                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-700 px-4 py-2 rounded shadow flex items-center space-x-2">
+                    <i class="mdi mdi-note-outline text-xl"></i>
+                    <span>Notes</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-700 text-white rounded-full mr-4">
+                        <i class="mdi mdi-trophy-variant text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">Precision Index</p>
+                        <h3 class="text-3xl font-bold text-blue-300">{{ metrics.win_rate }}%</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-700 text-white rounded-full mr-4">
+                        <i class="mdi mdi-target-variant text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">Recent Accuracy</p>
+                        <h3 class="text-3xl font-bold text-green-300">{{ metrics.recent_accuracy }}%</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-700 text-white rounded-full mr-4">
+                        <i class="mdi mdi-star-circle text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">Momentum Symbol</p>
+                        <h3 class="text-2xl font-semibold text-purple-300">{{ metrics.best_symbol }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-orange-700 text-white rounded-full mr-4">
+                        <i class="mdi mdi-clock-time-eight-outline text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">Hot Timeframe</p>
+                        <h3 class="text-2xl font-semibold text-orange-300">{{ metrics.hot_timeframe }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
+                <h2 class="text-xl font-semibold mb-4 text-blue-400">
+                    <i class="mdi mdi-chart-bar"></i> Win/Loss Landscape
+                </h2>
+                {{ win_loss_chart|safe }}
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
+                <h2 class="text-xl font-semibold mb-4 text-green-400">
+                    <i class="mdi mdi-timeline-clock-outline"></i> Performance Timeline
+                </h2>
+                {{ timeframe_chart|safe }}
+            </div>
+        </div>
+
+        <!-- Probability & Predictions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl">
+                <h2 class="text-xl font-semibold mb-4 text-yellow-400">
+                    <i class="mdi mdi-chart-bell-curve-cumulative"></i> Confidence Curve
+                </h2>
+                {{ probability_chart|safe }}
+            </div>
+            <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-pink-400">
+                        <i class="mdi mdi-bullseye-arrow"></i> Active Predictions
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700 text-sm">
+                            <thead class="bg-gray-700 text-gray-300">
+                                <tr>
+                                    <th class="px-6 py-3 text-left uppercase font-semibold">Symbol</th>
+                                    <th class="px-6 py-3 text-left uppercase font-semibold">Timeframe</th>
+                                    <th class="px-6 py-3 text-left uppercase font-semibold">Prediction</th>
+                                    <th class="px-6 py-3 text-left uppercase font-semibold">Outcome</th>
+                                    <th class="px-6 py-3 text-left uppercase font-semibold">Confidence</th>
+                                    <th class="px-6 py-3 text-left uppercase font-semibold">Expires In</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-gray-800 divide-y divide-gray-700">
+                                {% for pred in recent_predictions %}
+                                    {% if not pred.expired %}
+                                    <tr>
+                                        <td class="px-6 py-4">{{ pred.symbol }}</td>
+                                        <td class="px-6 py-4">{{ pred.timeframe }}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 text-xs font-bold rounded-full 
+                                                {% if pred.prediction_value == 'Buy' %}bg-green-600 text-white
+                                                {% else %}bg-red-600 text-white{% endif %}">
+                                                {{ pred.prediction_value }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {% if pred.result == 'Win' %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-700 text-white">
+                                                <i class="mdi mdi-thumb-up-outline"></i> Win
+                                            </span>
+                                            {% elif pred.result == 'Loss' %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-red-700 text-white">
+                                                <i class="mdi mdi-thumb-down-outline"></i> Loss
+                                            </span>
+                                            {% else %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-gray-600 text-white">
+                                                 Pending
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="w-full bg-gray-700 rounded-full h-2.5 mb-1">
+                                                <div class="bg-blue-400 h-2.5 rounded-full" style="width: {{ pred.probability }}%"></div>
+                                            </div>
+                                            <span class="text-xs text-gray-300">{{ pred.probability|floatformat:3 }}%</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ pred.time_remaining }}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expired Positions Panel -->
+        <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden mb-10">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold mb-4 text-red-400">
+                    <i class="mdi mdi-history"></i> Expired Positions
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700 text-sm">
+                        <thead class="bg-gray-700 text-gray-300">
+                            <tr>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Symbol</th>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Timeframe</th>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Prediction</th>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Outcome</th>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Confidence</th>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Expired</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-gray-800 divide-y divide-gray-700">
+                            {% for pred in recent_predictions %}
+                                {% if pred.expired %}
+                                <tr>
+                                    <td class="px-6 py-4">{{ pred.symbol }}</td>
+                                    <td class="px-6 py-4">{{ pred.timeframe }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2 py-1 text-xs font-bold rounded-full 
+                                            {% if pred.prediction_value == 'Buy' %}bg-green-600 text-white
+                                            {% else %}bg-red-600 text-white{% endif %}">
+                                            {{ pred.prediction_value }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {% if pred.result == 'Win' %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-green-700 text-white">
+                                            <i class="mdi mdi-thumb-up-outline"></i> Win
+                                        </span>
+                                        {% elif pred.result == 'Loss' %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-red-700 text-white">
+                                            <i class="mdi mdi-thumb-down-outline"></i> Loss
+                                        </span>
+                                        {% else %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-gray-600 text-white">
+                                            <i class="mdi mdi-clock-outline"></i> Expired
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-gray-700 rounded-full h-2.5 mb-1">
+                                            <div class="bg-blue-400 h-2.5 rounded-full" style="width: {{ pred.probability }}%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-300">{{ pred.probability|floatformat:3 }}%</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-400">
+                                        {{ pred.expired_at|date:"Y-m-d H:i" }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Symbol Matrix -->
+        <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold mb-4 text-indigo-400">
+                    <i class="mdi mdi-table-large"></i> Symbol Performance Matrix
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700 text-sm">
+                        <thead class="bg-gray-700 text-gray-300">
+                            <tr>
+                                <th class="px-6 py-3 text-left uppercase font-semibold">Symbol</th>
+                                {% for tf in symbol_matrix.0.keys|slice:"1:" %}
+                                <th class="px-6 py-3 text-left uppercase font-semibold">{{ tf }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-gray-800 divide-y divide-gray-700">
+                            {% for row in symbol_matrix %}
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-200">{{ row.symbol }}</td>
+                                {% for tf, stats in row.items %}
+                                {% if tf != 'symbol' %}
+                                <td class="px-6 py-4">
+                                    {% if stats.total > 0 %}
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-blue-300 font-semibold">{{ stats.win_rate|floatformat:1 }}%</span>
+                                        <span class="text-xs text-gray-400">({{ stats.wins }}/{{ stats.total }})</span>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-gray-500 italic">—</span>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+</div>
+
+    <!-- Note Taking Panel -->
+    <div id="notePanel" class="fixed top-0 right-[-400px] h-full w-96 bg-gray-800 shadow-lg flex flex-col z-50">
+        <div class="flex justify-between items-center p-4 border-b border-gray-700">
+            <h3 class="text-xl font-semibold text-yellow-400">
+                <i class="mdi mdi-note-text-outline mr-2"></i> Notes
+            </h3>
+            <button id="closeNoteBtn" class="text-yellow-400 hover:text-yellow-300">
+                <i class="mdi mdi-close text-2xl"></i>
+            </button>
+        </div>
+        <textarea id="noteTextarea" class="flex-grow bg-gray-900 text-gray-100 p-4 resize-none focus:outline-yellow-400"
+                  placeholder="Write your notes here..." spellcheck="false"></textarea>
+        <div class="p-4 border-t border-gray-700">
+            <button id="saveNoteBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 rounded">
+                Save Note
+            </button>
+        </div>
+
+          <div id="resizer"></div>
+
+    </div>
+<script>
+  // ==== DOM Elements ====
+  const notePanel = document.getElementById('notePanel');
+  const toggleNoteBtn = document.getElementById('toggleNoteBtn');
+  const closeNoteBtn = document.getElementById('closeNoteBtn');
+  const saveNoteBtn = document.getElementById('saveNoteBtn');
+  const noteTextarea = document.getElementById('noteTextarea');
+  const resizer = document.getElementById('resizer');
+  const noteIcon = toggleNoteBtn.querySelector('i');
+
+  // ==== State ====
+  let isResizing = false;
+  let panelWidth = parseInt(localStorage.getItem('notePanelWidth')) || 400;
+
+  // ==== Initialization ====
+  function initPanel() {
+    notePanel.style.width = `${panelWidth}px`;
+    notePanel.style.left = `-${panelWidth}px`;
+    notePanel.style.transition = 'left 0.3s ease, width 0.3s ease';
+  }
+
+  // ==== API Communication ====
+  function loadNote() {
+    fetch('/api/note/')
+      .then(response => response.ok ? response.json() : Promise.reject('Network error'))
+      .then(data => {
+        noteTextarea.value = data.note || '';
+      })
+      .catch(error => {
+        console.error('Failed to load note:', error);
+        noteTextarea.value = 'Error loading notes.';
+      });
+  }
+
+  function saveNote() {
+  const saveBtn = document.getElementById('saveNoteBtn');
+
+  fetch('/api/note/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: new URLSearchParams({ note: noteTextarea.value })
+  })
+    .then(response => response.ok ? response.json() : Promise.reject('Save failed'))
+    .then(data => {
+      if (data.status === 'success') {
+        console.log('Note saved successfully');
+
+        // Change button text to "Saved ✅"
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Saved ✅';
+
+        // Optional: Disable temporarily to prevent double-click
+        saveBtn.disabled = true;
+
+        // Revert back after 5 seconds
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 1500);
+      }
+    })
+    .catch(error => {
+      console.error('Error saving note:', error);
+    });
+}
+
+    // Add this helper function
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+        }
+        }
+    }
+    return cookieValue;
+    }
+
+
+  // ==== UI Actions ====
+  function togglePanel() {
+    const isOpen = notePanel.style.left === '0px';
+
+    if (!isOpen) {
+      loadNote();
+      notePanel.style.left = '0px';
+      noteIcon.className = 'mdi mdi-note-off-outline';
+    } else {
+      notePanel.style.left = `-${panelWidth}px`;
+      noteIcon.className = 'mdi mdi-note-outline';
+    }
+  }
+
+  function closePanel() {
+    notePanel.style.left = `-${panelWidth}px`;
+    noteIcon.className = 'mdi mdi-note-outline';
+  }
+
+  function savePanelWidth(width) {
+    panelWidth = width;
+    localStorage.setItem('notePanelWidth', width);
+    notePanel.style.width = `${width}px`;
+  }
+
+  // ==== Resizing Logic ====
+  resizer.addEventListener('mousedown', () => {
+    isResizing = true;
+    document.body.style.cursor = 'ew-resize';
+    notePanel.style.transition = 'none';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    const newWidth = Math.min(Math.max(e.clientX, 250), 800);
+    savePanelWidth(newWidth);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = '';
+      notePanel.style.transition = 'left 0.3s ease, width 0.3s ease';
+    }
+  });
+
+
+  // ==== Event Listeners ====
+  toggleNoteBtn.addEventListener('click', togglePanel);
+  closeNoteBtn.addEventListener('click', closePanel);
+  saveNoteBtn.addEventListener('click', saveNote);
+  window.addEventListener('DOMContentLoaded', initPanel);
+</script>
+
+</body>
+</html>
